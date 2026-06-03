@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de plantas</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- CONFIG TAILWIND -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        principal: '#1C7C54',
+                        verdeClaro: '#73E2A7',
+                        verdeSuave: '#DEF4C6',
+                        oscuro: '#1B512D',
+                        acento: '#B1CF5F'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+</head>
+
+<body class="bg-gradient-to-br from-[#DEF4C6] via-white to-[#73E2A7]/20 min-h-screen">
+
+<div class="app-shell flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <div th:replace="fragments/layout :: sidebar('plantas')"></div>
+
+    <!-- CONTENIDO -->
+    <main class="app-main flex-1 p-6 lg:p-10">
+
+        <!-- HEADER -->
+        <section class="page-header">
+
+            <div>
+
+                <small class="text-[#1C7C54] font-semibold">
+                    Sistema de Plantas
+                </small>
+
+                <h1 class="text-[#1B512D]">
+                    Lista de Plantas
+                </h1>
+
+                <p class="text-gray-600">
+                    Gestiona, administra y controla las plantas registradas en el sistema.
+                </p>
+
+            </div>
+
+            <div class="buttons">
+
+                <a th:href="@{/view/plantas/form}"
+                   class="btn-custom btn-principal">
+                    📝 Registrar
+                </a>
+
+                <a th:href="@{/view/plantas/pdf}"
+                   class="btn-custom btn-naranja">
+                    📄 Exportar PDF
+                </a>
+
+                <a th:href="@{/view/plantas/excel}"
+                   class="btn-custom btn-verde">
+                    📊 Exportar Excel
+                </a>
+
+            </div>
+
+        </section>
+
+        <!-- ALERTA -->
+        <div th:if="${success}"
+             class="alert-success-custom"
+             th:text="${success}">
+        </div>
+
+        <!-- TABLA -->
+        <section class="card-table bg-white rounded-[30px] shadow-xl overflow-hidden border border-[#DEF4C6]">
+
+            <!-- HEADER TABLA -->
+            <div class="bg-[#1B512D] px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+                <div>
+
+                    <h2 class="text-2xl font-bold text-white">
+                        Plantas Registradas
+                    </h2>
+
+                    <p class="text-[#DEF4C6] mt-1">
+                        Consulta y administra las plantas registradas.
+                    </p>
+
+                </div>
+
+                <!-- BUSCADOR -->
+                <div class="relative">
+
+                    <input type="text"
+                           id="searchInput"
+                           placeholder="Buscar planta..."
+                           class="w-full md:w-[300px] rounded-2xl border border-gray-200 bg-white px-5 py-3 pr-12 text-[#1B512D] outline-none transition duration-300 focus:border-[#1C7C54] focus:ring-4 focus:ring-[#73E2A7]/30">
+
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#1C7C54]">
+                        🔍
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- CONTENEDOR -->
+            <div class="overflow-x-auto">
+
+                <table class="min-w-full border-collapse" id="tablaPlantas">
+
+                    <thead class="bg-[#DEF4C6]">
+
+                    <tr>
+
+                        <th class="px-6 py-4 text-left text-[#1B512D] font-bold">
+                            ID
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-[#1B512D] font-bold">
+                            Codigo
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-[#1B512D] font-bold">
+                            Nombre
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-[#1B512D] font-bold">
+                            Nombre cientifico
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-[#1B512D] font-bold">
+                            Especie
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-[#1B512D] font-bold">
+                            Cantidad
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-[#1B512D] font-bold">
+                            Precio
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-[#1B512D] font-bold">
+                            Acciones
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:each="planta : ${plantas}"
+                        class="border-b border-gray-100 hover:bg-[#DEF4C6]/40 transition duration-300">
+
+                        <!-- DATOS -->
+                        <td class="px-6 py-4 font-semibold text-[#1C7C54]"
+                            th:text="${planta.id_plantas}">
+                        </td>
+
+                        <td class="px-6 py-4 text-gray-700"
+                            th:text="${planta.codigo}">
+                        </td>
+
+                        <td class="px-6 py-4 text-gray-700 font-medium"
+                            th:text="${planta.nombre}">
+                        </td>
+
+                        <td class="px-6 py-4 text-gray-700"
+                            th:text="${planta.nombre_cientifico}">
+                        </td>
+
+                        <td class="px-6 py-4">
+
+                            <span class="bg-[#B1CF5F]/20 text-[#1B512D] px-4 py-1 rounded-full text-sm font-semibold"
+                                  th:text="${planta.especie}">
+                            </span>
+
+                        </td>
+
+                        <td class="px-6 py-4 text-gray-700 font-semibold"
+                            th:text="${planta.cantidad}">
+                        </td>
+
+                        <td class="px-6 py-4 text-[#1C7C54] font-bold"
+                            th:text="${planta.precio}">
+                        </td>
+
+                        <!-- ACCIONES -->
+                        <td class="px-6 py-4">
+
+                            <div class="flex items-center gap-3">
+
+                                <!-- EDITAR -->
+                                <a th:href="@{'/view/plantas/edit/' + ${planta.id_plantas}}"
+                                   class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#1C7C54] text-white hover:bg-[#1B512D] transition duration-300 shadow-md">
+                                    ✏️
+                                </a>
+
+                                <!-- ELIMINAR -->
+                                <form th:action="@{'/view/plantas/delete/' + ${planta.id_plantas}}"
+                                      method="post">
+
+                                    <button type="submit"
+                                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500 text-white hover:bg-red-600 transition duration-300 shadow-md"
+                                            onclick="return confirm('¿Está seguro que desea eliminar esta planta?')">
+                                        🗑️
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+
+</body>
+</html>

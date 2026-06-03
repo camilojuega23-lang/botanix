@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de jardineros</title>
+
+    <!-- CONFIG TAILWIND -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        principal: '#1C7C54',   // Turf Green
+                        verdeClaro: '#73E2A7', // Light Green
+                        verdeSuave: '#DEF4C6', // Tea Green
+                        oscuro: '#1B512D',     // Dark Spruce
+                        acento: '#B1CF5F'      // Yellow Green
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+</head>
+
+<body class="bg-gradient-to-br from-verdeSuave via-white to-verdeClaro/20 min-h-screen">
+
+<div class="app-shell flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <div th:replace="fragments/layout :: sidebar('jardinero')"></div>
+
+    <!-- CONTENIDO -->
+    <main class="app-main flex-1 p-6 lg:p-10">
+
+        <!-- HEADER -->
+        <section class="page-header">
+
+            <div>
+                <small class="text-principal font-semibold">
+                    Sistema de Jardinero
+                </small>
+
+                <h1 class="text-oscuro">
+                    Lista de Jardineros
+                </h1>
+
+                <p class="text-gray-600">
+                    Gestiona, administra y controla los jardinero registrados en el sistema.
+                </p>
+            </div>
+
+            <div class="buttons">
+
+                <a th:href="@{/view/jardinero/form}"
+                   class="btn-custom btn-principal">
+                    📝 Registrar
+                </a>
+
+                <a th:href="@{/view/jardinero/pdf}"
+                   class="btn-custom btn-naranja">
+                    📄 Exportar PDF
+                </a>
+
+                <a th:href="@{/view/jardinero/excel}"
+                   class="btn-custom btn-verde">
+                    📊 Exportar Excel
+                </a>
+
+            </div>
+
+        </section>
+
+        <!-- ALERTA -->
+        <div th:if="${success}"
+             class="alert-success-custom"
+             th:text="${success}">
+        </div>
+
+        <!-- TABLA -->
+        <section class="card-table bg-white rounded-[30px] shadow-xl overflow-hidden">
+
+            <!-- HEADER TABLA -->
+            <div class="card-table-header bg-oscuro px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+                <div>
+                    <h2 class="text-2xl font-bold text-white">
+                        Jardineros Registrados
+                    </h2>
+
+                    <p class="text-verdeSuave mt-1">
+                        Consulta y administra los jardineros registrados.
+                    </p>
+                </div>
+
+                <!-- BUSCADOR -->
+                <div class="search-box relative">
+
+                    <input type="text"
+                           id="searchInput"
+                           placeholder="Buscar jardinero..."
+                           class="w-full md:w-[300px] rounded-2xl border border-gray-200 bg-white px-5 py-3 pr-12 text-oscuro outline-none transition focus:border-principal focus:ring-4 focus:ring-principal/20">
+
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-principal">
+                        🔍
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- CONTENEDOR -->
+            <div class="table-container overflow-x-auto">
+
+                <table class="custom-table min-w-full" id="tablaJardinero">
+
+                    <thead class="bg-verdeSuave">
+
+                    <tr>
+
+                        <th class="px-6 py-4 text-left text-oscuro font-bold">ID</th>
+                        <th class="px-6 py-4 text-left text-oscuro font-bold">Nombre</th>
+                        <th class="px-6 py-4 text-left text-oscuro font-bold">Documento</th>
+                        <th class="px-6 py-4 text-left text-oscuro font-bold">Direccion</th>
+                        <th class="px-6 py-4 text-left text-oscuro font-bold">Rol</th>
+                        <th class="px-6 py-4 text-left text-oscuro font-bold">Acciones</th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <tr th:each="jardineros : ${jardinero}"
+                        class="border-b border-gray-100 hover:bg-verdeSuave/30 transition">
+
+
+                        <!-- DATOS -->
+                        <td class="text-id px-6 py-4 font-semibold text-principal"
+                            th:text="${jardineros.id_jardinero}">
+                        </td>
+
+                        <td class="px-6 py-4 text-gray-700"
+                            th:text="${jardineros.nombre}">
+                        </td>
+
+                        <td class="px-6 py-4 text-gray-700"
+                            th:text="${jardineros.documento}">
+                        </td>
+
+                        <td class="px-6 py-4 text-gray-700"
+                            th:text="${jardineros.direccion}">
+                        </td>
+
+                        <td class="px-6 py-4">
+                                <span class="bg-acento/20 text-oscuro px-4 py-1 rounded-full text-sm font-semibold"
+                                      th:text="${jardineros.rol}">
+                                </span>
+                        </td>
+
+                        <!-- ACCIONES -->
+                        <td class="px-6 py-4">
+
+                            <div class="actions flex items-center gap-3">
+
+                                <!-- EDITAR -->
+                                <a th:href="@{'/view/jardinero/edit/' + ${jardineros.id_jardinero}}"
+                                   class="btn-action btn-edit bg-principal text-white w-10 h-10 flex items-center justify-center rounded-xl hover:bg-oscuro transition">
+                                    ✏️
+                                </a>
+
+                                <!-- ELIMINAR -->
+                                <form th:action="@{'/view/jardinero/delete/' + ${jardineros.id_jardinero}}"
+                                      method="post">
+
+                                    <button type="submit"
+                                            class="btn-action btn-delete bg-red-500 text-white w-10 h-10 flex items-center justify-center rounded-xl hover:bg-red-600 transition"
+                                            onclick="return confirm('¿Está seguro que desea eliminar este jardinero?')">
+                                        🗑️
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+
+</body>
+</html>

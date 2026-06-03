@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        principal: '#1C7C54',
+                        verdeClaro: '#73E2A7',
+                        verdeSuave: '#DEF4C6',
+                        oscuro: '#1B512D',
+                        acento: '#B1CF5F'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body class="bg-gradient-to-br from-verdeSuave via-white to-verdeClaro/20 min-h-screen">
+
+<div class="app-shell flex min-h-screen">
+
+    <div th:replace="fragments/layout :: sidebar('dashboard')"></div>
+
+    <main class="app-main flex-1 p-6 lg:p-10">
+
+        <section class="page-header">
+            <div>
+                <small class="text-principal font-semibold">
+                    Panel general
+                </small>
+
+                <h1 class="text-oscuro">
+                    Dashboard Botanix
+                </h1>
+
+                <p class="text-gray-600">
+                    Resumen de plantas, jardineros e inventario registrado en el sistema.
+                </p>
+            </div>
+
+            <div class="buttons">
+                <a th:href="@{/view/plantas/form}" class="btn-custom btn-principal">
+                    Registrar planta
+                </a>
+
+                <a th:href="@{/view/jardinero/form}" class="btn-custom btn-verde">
+                    Registrar jardinero
+                </a>
+            </div>
+        </section>
+
+        <section class="dashboard-stats-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+
+            <article class="dashboard-card">
+                <div class="dashboard-icon bg-[#1C7C54]">
+                    P
+                </div>
+                <div>
+                    <p class="dashboard-label">Plantas registradas</p>
+                    <h2 class="dashboard-value" th:text="${totalPlantas}">0</h2>
+                </div>
+            </article>
+
+            <article class="dashboard-card">
+                <div class="dashboard-icon bg-[#73E2A7] text-[#1B512D]">
+                    J
+                </div>
+                <div>
+                    <p class="dashboard-label">Jardineros activos</p>
+                    <h2 class="dashboard-value" th:text="${totalJardineros}">0</h2>
+                </div>
+            </article>
+
+            <article class="dashboard-card">
+                <div class="dashboard-icon bg-[#B1CF5F] text-[#1B512D]">
+                    S
+                </div>
+                <div>
+                    <p class="dashboard-label">Stock total</p>
+                    <h2 class="dashboard-value" th:text="${stockTotal}">0</h2>
+                </div>
+            </article>
+
+            <article class="dashboard-card">
+                <div class="dashboard-icon bg-[#1B512D]">
+                    $
+                </div>
+                <div>
+                    <p class="dashboard-label">Valor inventario</p>
+                    <h2 class="dashboard-value" th:text="${'$ ' + #numbers.formatInteger(valorInventario, 0, 'POINT')}">$ 0</h2>
+                </div>
+            </article>
+
+        </section>
+
+        <section class="dashboard-content-grid grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
+
+            <article class="dashboard-panel dashboard-panel-fit xl:col-span-2">
+                <div class="dashboard-panel-header">
+                    <div>
+                        <h2>Plantas recientes</h2>
+                        <p>Ultimos registros agregados al inventario.</p>
+                    </div>
+
+                    <a th:href="@{/view/plantas}" class="dashboard-link">
+                        Ver plantas
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="custom-table min-w-full">
+                        <thead>
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Nombre</th>
+                            <th>Especie</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="planta : ${ultimasPlantas}">
+                            <td th:text="${planta.codigo}">COD</td>
+                            <td th:text="${planta.nombre}">Nombre</td>
+                            <td>
+                                <span class="dashboard-badge" th:text="${planta.especie}">Especie</span>
+                            </td>
+                            <td th:text="${planta.cantidad}">0</td>
+                            <td class="font-bold text-principal" th:text="${planta.precio != null ? '$ ' + #numbers.formatInteger(planta.precio, 0, 'POINT') : '$ 0'}">$ 0</td>
+                        </tr>
+
+                        <tr th:if="${#lists.isEmpty(ultimasPlantas)}">
+                            <td colspan="5" class="text-center text-gray-500">
+                                No hay plantas registradas.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="dashboard-panel dashboard-panel-fit">
+                <div class="dashboard-panel-header">
+                    <div>
+                        <h2>Resumen</h2>
+                        <p>Distribucion actual.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-5">
+                    <div class="dashboard-summary-row">
+                        <span>Especies registradas</span>
+                        <strong th:text="${especiesRegistradas}">0</strong>
+                    </div>
+
+                    <div>
+                        <h3 class="dashboard-subtitle">Plantas por especie</h3>
+
+                        <div class="space-y-3" th:if="${!#maps.isEmpty(plantasPorEspecie)}">
+                            <div class="dashboard-distribution" th:each="entry : ${plantasPorEspecie}">
+                                <span th:text="${entry.key}">Especie</span>
+                                <strong th:text="${entry.value}">0</strong>
+                            </div>
+                        </div>
+
+                        <p class="dashboard-empty" th:if="${#maps.isEmpty(plantasPorEspecie)}">
+                            Sin especies registradas.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 class="dashboard-subtitle">Jardineros por rol</h3>
+
+                        <div class="space-y-3" th:if="${!#maps.isEmpty(jardinerosPorRol)}">
+                            <div class="dashboard-distribution" th:each="entry : ${jardinerosPorRol}">
+                                <span th:text="${entry.key}">Rol</span>
+                                <strong th:text="${entry.value}">0</strong>
+                            </div>
+                        </div>
+
+                        <p class="dashboard-empty" th:if="${#maps.isEmpty(jardinerosPorRol)}">
+                            Sin roles registrados.
+                        </p>
+                    </div>
+                </div>
+            </article>
+
+        </section>
+
+        <section class="dashboard-panel dashboard-panel-fit">
+            <div class="dashboard-panel-header">
+                <div>
+                    <h2>Jardineros recientes</h2>
+                    <p>Personal registrado para administracion y cuidado.</p>
+                </div>
+
+                <a th:href="@{/view/jardinero}" class="dashboard-link">
+                    Ver jardineros
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <article class="dashboard-person" th:each="jardinero : ${ultimosJardineros}">
+                    <div class="dashboard-avatar">
+                        <span th:text="${jardinero.nombre != null && !#strings.isEmpty(jardinero.nombre) ? #strings.substring(jardinero.nombre, 0, 1) : 'J'}">J</span>
+                    </div>
+
+                    <div>
+                        <h3 th:text="${jardinero.nombre}">Nombre</h3>
+                        <p th:text="${jardinero.documento}">Documento</p>
+                        <span th:text="${jardinero.rol}">Rol</span>
+                    </div>
+                </article>
+
+                <p class="dashboard-empty md:col-span-2 xl:col-span-3" th:if="${#lists.isEmpty(ultimosJardineros)}">
+                    No hay jardineros registrados.
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+
+</body>
+</html>
