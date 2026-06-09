@@ -27,7 +27,7 @@ public class UsuarioView {
     @PostMapping("/login")
     public String procesarLogin(@RequestParam String correo, @RequestParam String contrasena, HttpSession session, RedirectAttributes ra) {
 
-        Optional<Usuario> resultado = usuarioRepository.findByEmail(correo);
+        Optional<Usuario> resultado = usuarioRepository.findByCorreo(correo);
 
         if (resultado.isPresent()) {
             Usuario usuario = resultado.get();
