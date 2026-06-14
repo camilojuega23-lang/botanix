@@ -18,4 +18,6 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
+ENV JAVA_TOOL_OPTIONS="-Xmx256m -Xms128m"
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
