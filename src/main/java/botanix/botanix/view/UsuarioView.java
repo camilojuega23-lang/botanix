@@ -5,7 +5,6 @@ import botanix.botanix.repository.UsuarioRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,14 +19,18 @@ public class UsuarioView {
     private UsuarioRepository usuarioRepository;
 
     @GetMapping("/login")
-    public String mostrarLogin() {
+    public String mostrarLogin(HttpSession session) {
+        if (session.getAttribute("usuarioLogueado") != null) {
+            return "redirect:/dashboard";
+        }
+
         return "usuario/login";
     }
 
     @PostMapping("/login")
     public String procesarLogin(@RequestParam String correo, @RequestParam String contrasena, HttpSession session, RedirectAttributes ra) {
 
-        Optional<Usuario> resultado = usuarioRepository.findByCorreo(correo);
+        Optional<Usuario> resultado = usuarioRepository.findByCorreo(correo.trim());
 
         if (resultado.isPresent()) {
             Usuario usuario = resultado.get();
@@ -37,7 +40,45 @@ public class UsuarioView {
             }
         }
 
-        ra.addFlashAttribute("error", "Correo o contraseña incorrectos");
+        ra.addFlashAttribute("error", "Correo o contrasena incorrectos");
+        return "redirect:/login";
+    }
+
+    @GetMapping("/registro")
+    public String mostrarRegistro(HttpSession session) {
+        if (session.getAttribute("usuarioLogueado") != null) {
+            return "redirect:/dashboard";
+        }
+
+        return "usuario/registro";
+    }
+
+    @PostMapping("/registro")
+    public String procesarRegistro(@RequestParam String nombre,
+                                   @RequestParam String correo,
+                                   @RequestParam String contrasena,
+                                   RedirectAttributes ra) {
+        String nombreNormalizado = nombre.trim();
+        String correoNormalizado = correo.trim();
+
+        if (nombreNormalizado.isEmpty() || correoNormalizado.isEmpty() || contrasena.isBlank()) {
+            ra.addFlashAttribute("error", "Completa todos los campos requeridos");
+            return "redirect:/registro";
+        }
+
+        if (usuarioRepository.findByCorreo(correoNormalizado).isPresent()) {
+            ra.addFlashAttribute("error", "Ya existe un usuario con ese correo");
+            return "redirect:/registro";
+        }
+
+        Usuario usuario = Usuario.builder()
+                .nombre(nombreNormalizado)
+                .correo(correoNormalizado)
+                .contrasena(contrasena)
+                .build();
+
+        usuarioRepository.save(usuario);
+        ra.addFlashAttribute("success", "Usuario registrado. Ahora puedes iniciar sesion");
         return "redirect:/login";
     }
 
