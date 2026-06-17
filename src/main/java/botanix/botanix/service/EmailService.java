@@ -14,15 +14,6 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     public void enviarCorreoRecuperacion(String destinatario, String enlace) {
-        System.out.println("==================================================");
-        System.out.println("ENLACE DE RECUPERACIÓN GENERADO:");
-        System.out.println(enlace);
-        System.out.println("==================================================");
-
-        if (mailSender == null) {
-            System.err.println("Advertencia: JavaMailSender no está disponible. No se puede enviar el email real.");
-            return;
-        }
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
