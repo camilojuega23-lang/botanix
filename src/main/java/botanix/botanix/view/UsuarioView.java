@@ -151,8 +151,14 @@ public class UsuarioView {
         String appUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
         String enlace = appUrl + "/nueva-password?token=" + token;
 
-        // Enviar el correo
-        emailService.enviarCorreoRecuperacion(correoNormalizado, enlace);
+        try {
+            emailService.enviarCorreoRecuperacion(correoNormalizado, enlace);
+        } catch (Exception e) {
+            tokenRepository.delete(resetToken);
+            System.err.println("Error al enviar correo de recuperacion a " + correoNormalizado + ": " + e.getMessage());
+            ra.addFlashAttribute("error", "No se pudo enviar el correo de recuperacion. Verifica la configuracion SMTP e intenta nuevamente.");
+            return "redirect:/recuperar-password";
+        }
 
         ra.addFlashAttribute("success", "Hemos enviado un correo para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada.");
         return "redirect:/recuperar-password";
