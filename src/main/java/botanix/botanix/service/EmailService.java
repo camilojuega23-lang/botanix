@@ -1,37 +1,46 @@
 package botanix.botanix.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Service;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${resend.api-key}")
+    private String resendApiKey;
 
-    @Value("${spring.mail.username}")
+    @Value("${resend.from}")
     private String remitente;
 
-    public void enviarCorreoRecuperacion(String destinatario, String enlace) throws MessagingException {
-        log.info("Intentando enviar correo de recuperacion a {} desde {}", destinatario, remitente);
+    public void enviarCorreoRecuperacion(String destinatario, String enlace) throws ResendException {
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            throw new IllegalStateException("RESEND_API_KEY no esta configurada.");
+        }
 
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        Resend resend = new Resend(resendApiKey);
 
-        helper.setFrom(remitente);
-        helper.setTo(destinatario);
-        helper.setSubject("Restablecer tu contrasena - Botanix");
+        CreateEmailOptions params = CreateEmailOptions.builder()
+                .from(remitente)
+                .to(destinatario)
+                .subject("Restablecer tu contrasena - Botanix")
+                .html(construirContenidoRecuperacion(enlace))
+                .build();
 
-        String contenidoHtml = "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #DEF4C6; border-radius: 10px;\">"
+        log.info("Intentando enviar correo de recuperacion con Resend a {} desde {}", destinatario, remitente);
+        CreateEmailResponse response = resend.emails().send(params);
+        log.info("Correo de recuperacion enviado con Resend a {}. Email id: {}", destinatario, response.getId());
+    }
+
+    private String construirContenidoRecuperacion(String enlace) {
+        return "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #DEF4C6; border-radius: 10px;\">"
                 + "<h2 style=\"color: #1B512D;\">Restablecer tu contrasena</h2>"
                 + "<p>Hola,</p>"
                 + "<p>Has solicitado restablecer tu contrasena en el sistema de gestion <strong>Botanix</strong>.</p>"
@@ -43,9 +52,5 @@ public class EmailService {
                 + "<br>"
                 + "<p>Atentamente,<br>El equipo de Botanix</p>"
                 + "</div>";
-
-        helper.setText(contenidoHtml, true);
-        mailSender.send(message);
-        log.info("Correo de recuperacion enviado a {}", destinatario);
     }
 }

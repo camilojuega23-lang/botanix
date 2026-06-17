@@ -160,7 +160,7 @@ public class UsuarioView {
         } catch (Exception e) {
             tokenRepository.delete(resetToken);
             log.error("Error al enviar correo de recuperacion a {}", correoNormalizado, e);
-            ra.addFlashAttribute("error", "No se pudo enviar el correo de recuperacion. Verifica la configuracion SMTP e intenta nuevamente.");
+            ra.addFlashAttribute("error", "No se pudo enviar el correo de recuperacion. Verifica la configuracion de Resend e intenta nuevamente.");
             return "redirect:/recuperar-password";
         }
 
