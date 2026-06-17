@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración – Botanix</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        principal: '#1C7C54',
+                        verdeClaro: '#73E2A7',
+                        verdeSuave: '#DEF4C6',
+                        oscuro: '#1B512D',
+                        acento: '#B1CF5F'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        /* ── Tarjeta de configuración ── */
+        .cfg-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid #DEF4C6;
+            box-shadow: 0 4px 24px rgba(28,124,84,.08);
+            overflow: hidden;
+            transition: box-shadow .25s;
+        }
+        .cfg-card:hover { box-shadow: 0 8px 36px rgba(28,124,84,.14); }
+
+        .cfg-card-header {
+            background: linear-gradient(135deg,#1B512D,#1C7C54);
+            padding: 1.1rem 1.5rem;
+            display: flex; align-items: center; gap: .8rem;
+        }
+        .cfg-card-header .hicon {
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,.15);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+        .cfg-card-header h2 { color: white; font-size: 1rem; font-weight: 700; }
+        .cfg-card-header p  { color: #DEF4C6; font-size: .75rem; margin-top: .1rem; }
+        .cfg-card-body { padding: 1.5rem; }
+
+        /* ── Fila de info ── */
+        .info-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .65rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-row .label { font-size: .82rem; color: #6b7280; font-weight: 500; }
+        .info-row .value { font-size: .875rem; color: #1B512D; font-weight: 700; }
+
+        /* ── Stat pill ── */
+        .stat-pill {
+            display: flex; align-items: center; gap: .75rem;
+            border: 1px solid #DEF4C6;
+            background: rgba(222,244,198,.35);
+            border-radius: 16px;
+            padding: .9rem 1.2rem;
+            transition: background .2s;
+        }
+        .stat-pill:hover { background: #DEF4C6; }
+        .stat-pill .sp-icon { font-size: 1.6rem; }
+        .stat-pill .sp-num  { font-size: 1.75rem; font-weight: 800; color: #1B512D; line-height: 1; }
+        .stat-pill .sp-lbl  { font-size: .75rem; color: #6b7280; font-weight: 600; }
+
+        /* ── Toggle switch ── */
+        .toggle-wrap { display: flex; align-items: center; justify-content: space-between; padding: .6rem 0; }
+        .toggle-label { font-size: .875rem; color: #374151; font-weight: 500; }
+        .toggle-desc  { font-size: .75rem; color: #9ca3af; }
+        .toggle {
+            position: relative; display: inline-block;
+            width: 48px; height: 26px; flex-shrink: 0;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; inset: 0;
+            background: #d1d5db; border-radius: 99px;
+            transition: .3s;
+        }
+        .toggle-slider:before {
+            content: ''; position: absolute;
+            height: 20px; width: 20px;
+            left: 3px; bottom: 3px;
+            background: white; border-radius: 50%;
+            transition: .3s;
+            box-shadow: 0 1px 4px rgba(0,0,0,.2);
+        }
+        input:checked + .toggle-slider { background: #1C7C54; }
+        input:checked + .toggle-slider:before { transform: translateX(22px); }
+
+        /* ── Botón de acción ── */
+        .btn-action {
+            display: inline-flex; align-items: center; gap: .5rem;
+            padding: .6rem 1.25rem; border-radius: 12px;
+            font-size: .82rem; font-weight: 700; cursor: pointer;
+            border: none; text-decoration: none; transition: all .2s;
+        }
+        .btn-green { background: #DEF4C6; color: #1B512D; }
+        .btn-green:hover  { background: #B1CF5F; }
+        .btn-red   { background: #fee2e2; color: #b91c1c; }
+        .btn-red:hover    { background: #fca5a5; }
+        .btn-blue  { background: #dbeafe; color: #1e40af; }
+        .btn-blue:hover   { background: #93c5fd; }
+
+        /* ── Zona de subida de foto ── */
+        .upload-zone {
+            border: 2.5px dashed #B1CF5F;
+            border-radius: 20px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            transition: all .25s;
+            cursor: pointer;
+            background: rgba(222,244,198,.2);
+            position: relative;
+        }
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #1C7C54;
+            background: rgba(222,244,198,.5);
+        }
+        .upload-zone input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+        }
+        .preview-img {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #B1CF5F;
+            box-shadow: 0 4px 16px rgba(28,124,84,.2);
+            display: none;
+            margin: 0 auto .75rem;
+        }
+
+        /* ── Animación ── */
+        @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        .anim    { animation: fadeUp .4s ease both; }
+        .anim-d1 { animation-delay:.04s }
+        .anim-d2 { animation-delay:.10s }
+        .anim-d3 { animation-delay:.16s }
+        .anim-d4 { animation-delay:.22s }
+        .anim-d5 { animation-delay:.28s }
+
+        .version-badge {
+            display: inline-flex; align-items: center; gap: .4rem;
+            background: #DEF4C6; color: #1B512D;
+            border-radius: 99px; padding: .25rem .9rem;
+            font-size: .78rem; font-weight: 700;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-verdeSuave via-white to-verdeClaro/20 min-h-screen">
+
+<div class="app-shell flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <div th:replace="fragments/layout :: sidebar('configuracion')"></div>
+
+    <!-- CONTENIDO -->
+    <main class="app-main flex-1 p-6 lg:p-10">
+
+        <!-- ── HEADER ── -->
+        <section class="page-header">
+            <div>
+                <small class="text-principal font-semibold">Ajustes del sistema</small>
+                <h1 class="text-oscuro">Configuración</h1>
+                <p class="text-gray-600">Personaliza, monitorea y administra los parámetros de Botanix.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="version-badge">🌿 v<span th:text="${version}">1.0.0</span></span>
+            </div>
+        </section>
+
+        <!-- ── ALERTAS FLASH ── -->
+        <div th:if="${success}"
+             class="alert-success-custom mb-6"
+             th:text="${success}">
+        </div>
+        <div th:if="${error}"
+             class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-6 py-4 text-sm font-semibold text-red-700"
+             th:text="${error}">
+        </div>
+
+        <!-- ── RESUMEN RÁPIDO ── -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 anim anim-d1">
+            <div class="stat-pill">
+                <span class="sp-icon">🌱</span>
+                <div>
+                    <div class="sp-num" th:text="${totalPlantas}">0</div>
+                    <div class="sp-lbl">Plantas registradas</div>
+                </div>
+            </div>
+            <div class="stat-pill">
+                <span class="sp-icon">🧑‍🌾</span>
+                <div>
+                    <div class="sp-num" th:text="${totalJardineros}">0</div>
+                    <div class="sp-lbl">Jardineros activos</div>
+                </div>
+            </div>
+            <div class="stat-pill">
+                <span class="sp-icon">👤</span>
+                <div>
+                    <div class="sp-num" th:text="${totalUsuarios}">0</div>
+                    <div class="sp-lbl">Usuarios del sistema</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── GRID PRINCIPAL ── -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+            <!-- ══ FOTO DE PERFIL ══ -->
+            <article class="cfg-card anim anim-d2">
+                <div class="cfg-card-header">
+                    <div class="hicon">📸</div>
+                    <div>
+                        <h2>Foto de perfil</h2>
+                        <p>Cambia la imagen que aparece en el menú lateral</p>
+                    </div>
+                </div>
+                <div class="cfg-card-body">
+
+                    <!-- Vista previa foto actual -->
+                    <div class="flex items-center gap-5 mb-6 pb-5" style="border-bottom:1px solid #f3f4f6">
+                        <img src="/img/img.png"
+                             id="currentPhoto"
+                             alt="Foto de perfil actual"
+                             class="w-20 h-20 rounded-full object-cover"
+                             style="border:4px solid #B1CF5F; box-shadow:0 4px 16px rgba(28,124,84,.2);">
+                        <div>
+                            <p class="font-bold text-oscuro">Foto actual</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Aparece en la barra lateral del sistema.<br>
+                                Formatos aceptados: JPG, PNG, GIF, WebP.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Formulario upload -->
+                    <form th:action="@{/configuracion/foto}"
+                          method="post"
+                          enctype="multipart/form-data"
+                          id="fotoForm">
+
+                        <!-- Zona drag & drop -->
+                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fotoInput').click()">
+                            <input type="file"
+                                   name="foto"
+                                   id="fotoInput"
+                                   accept="image/*"
+                                   style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;">
+
+                            <!-- Preview antes de subir -->
+                            <img id="previewImg" class="preview-img" alt="Vista previa" />
+
+                            <div id="uploadPlaceholder">
+                                <div style="font-size:2.5rem;margin-bottom:.5rem;">🖼️</div>
+                                <p class="font-bold text-oscuro text-sm">
+                                    Haz clic o arrastra una imagen aquí
+                                </p>
+                                <p class="text-xs text-gray-400 mt-1">JPG, PNG, GIF, WebP · máx. 5 MB</p>
+                            </div>
+                        </div>
+
+                        <!-- Nombre del archivo seleccionado -->
+                        <p id="fileName"
+                           class="text-xs text-gray-500 mt-2 text-center hidden">
+                        </p>
+
+                        <button type="submit"
+                                id="btnSubirFoto"
+                                class="btn-custom btn-principal w-full mt-4 justify-center"
+                                style="opacity:.5;pointer-events:none;">
+                            📤 Guardar foto de perfil
+                        </button>
+                    </form>
+
+                </div>
+            </article>
+
+            <!-- ══ INFORMACIÓN DEL SISTEMA ══ -->
+            <article class="cfg-card anim anim-d3">
+                <div class="cfg-card-header">
+                    <div class="hicon">🖥️</div>
+                    <div>
+                        <h2>Información del sistema</h2>
+                        <p>Detalles técnicos del entorno de ejecución</p>
+                    </div>
+                </div>
+                <div class="cfg-card-body">
+                    <div class="info-row">
+                        <span class="label">Aplicación</span>
+                        <span class="value">BOTANIX Sistema de Gestión</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Versión</span>
+                        <span class="value" th:text="${version}">1.0.0</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Puerto del servidor</span>
+                        <span class="value">8080</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Framework</span>
+                        <span class="value">Spring Boot 3.x + Thymeleaf</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Java Runtime</span>
+                        <span class="value" th:text="${javaVersion}">17</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Sistema operativo</span>
+                        <span class="value" th:text="${os}">–</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Estado</span>
+                        <span class="value flex items-center gap-2">
+                            <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                            Operativo
+                        </span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ══ PREFERENCIAS VISUALES ══ -->
+            <article class="cfg-card anim anim-d4">
+                <div class="cfg-card-header">
+                    <div class="hicon">🎨</div>
+                    <div>
+                        <h2>Preferencias visuales</h2>
+                        <p>Ajustes de interfaz y experiencia de usuario</p>
+                    </div>
+                </div>
+                <div class="cfg-card-body space-y-2">
+
+                    <div class="toggle-wrap">
+                        <div>
+                            <div class="toggle-label">Animaciones de interfaz</div>
+                            <div class="toggle-desc">Micro-animaciones en tarjetas y transiciones</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="toggleAnimaciones" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-wrap">
+                        <div>
+                            <div class="toggle-label">Barra lateral compacta</div>
+                            <div class="toggle-desc">Colapsa el sidebar para más espacio</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="toggleSidebar">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-wrap">
+                        <div>
+                            <div class="toggle-label">Confirmaciones de eliminación</div>
+                            <div class="toggle-desc">Pedir confirmación antes de borrar registros</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="toggleConfirm" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-wrap">
+                        <div>
+                            <div class="toggle-label">Resaltar bajo stock</div>
+                            <div class="toggle-desc">Marcar en rojo plantas con menos de 10 unidades</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="toggleLowStock" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                </div>
+            </article>
+
+            <!-- ══ MANTENIMIENTO ══ -->
+            <article class="cfg-card anim anim-d5">
+                <div class="cfg-card-header">
+                    <div class="hicon">🔧</div>
+                    <div>
+                        <h2>Mantenimiento</h2>
+                        <p>Herramientas de administración y accesos rápidos</p>
+                    </div>
+                </div>
+                <div class="cfg-card-body space-y-5">
+
+                    <div class="flex items-start justify-between gap-4 pb-4" style="border-bottom:1px solid #f3f4f6">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Limpiar caché del sistema</p>
+                            <p class="text-xs text-gray-500 mt-1">Libera datos temporales acumulados.</p>
+                        </div>
+                        <form th:action="@{/configuracion/limpiar-cache}" method="post">
+                            <button type="submit" class="btn-action btn-green">🗑️ Limpiar</button>
+                        </form>
+                    </div>
+
+                    <div class="flex items-start justify-between gap-4 pb-4" style="border-bottom:1px solid #f3f4f6">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Exportar inventario completo</p>
+                            <p class="text-xs text-gray-500 mt-1">Descarga todas las plantas en Excel.</p>
+                        </div>
+                        <a th:href="@{/view/plantas/excel}" class="btn-action btn-blue">📊 Excel</a>
+                    </div>
+
+                    <div class="flex items-start justify-between gap-4 pb-4" style="border-bottom:1px solid #f3f4f6">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Registrar nuevo usuario</p>
+                            <p class="text-xs text-gray-500 mt-1">Crear una nueva cuenta de acceso.</p>
+                        </div>
+                        <a th:href="@{/registro}" class="btn-action btn-green">👤 Crear</a>
+                    </div>
+
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Cerrar sesión</p>
+                            <p class="text-xs text-gray-500 mt-1">Termina la sesión del usuario actual.</p>
+                        </div>
+                        <a th:href="@{/logout}" class="btn-action btn-red">🚪 Salir</a>
+                    </div>
+
+                </div>
+            </article>
+
+        </div><!-- /grid -->
+
+        <div class="mt-8 text-center text-xs text-gray-400 anim anim-d5">
+            BOTANIX v<span th:text="${version}">1.0.0</span> ·
+            Spring Boot + Thymeleaf + TailwindCSS
+        </div>
+
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+
+<script>
+    // ── Toggles: persistencia en localStorage ──
+    document.querySelectorAll('.toggle input[type=checkbox]').forEach(t => {
+        const saved = localStorage.getItem(t.id);
+        if (saved !== null) t.checked = saved === 'true';
+        t.addEventListener('change', () => localStorage.setItem(t.id, t.checked));
+    });
+
+    // ── Subida de foto: preview y drag & drop ──
+    const fotoInput      = document.getElementById('fotoInput');
+    const previewImg     = document.getElementById('previewImg');
+    const placeholder    = document.getElementById('uploadPlaceholder');
+    const fileNameEl     = document.getElementById('fileName');
+    const btnSubir       = document.getElementById('btnSubirFoto');
+    const uploadZone     = document.getElementById('uploadZone');
+
+    function mostrarPreview(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            previewImg.src = e.target.result;
+            previewImg.style.display = 'block';
+            placeholder.style.display = 'none';
+            fileNameEl.textContent = '📎 ' + file.name;
+            fileNameEl.classList.remove('hidden');
+            btnSubir.style.opacity = '1';
+            btnSubir.style.pointerEvents = 'auto';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    fotoInput.addEventListener('change', () => {
+        if (fotoInput.files[0]) mostrarPreview(fotoInput.files[0]);
+    });
+
+    // Drag & drop
+    uploadZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            // Asignar al input para que el form lo envíe
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fotoInput.files = dt.files;
+            mostrarPreview(file);
+        }
+    });
+</script>
+
+</body>
+</html>

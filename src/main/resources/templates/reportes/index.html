@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes – Botanix</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        principal: '#1C7C54',
+                        verdeClaro: '#73E2A7',
+                        verdeSuave: '#DEF4C6',
+                        oscuro: '#1B512D',
+                        acento: '#B1CF5F'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        /* ── Tarjetas de métrica ── */
+        .metric-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 24px rgba(28,124,84,.08);
+            border: 1px solid #DEF4C6;
+            transition: transform .25s, box-shadow .25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            opacity: .06;
+            background: #1C7C54;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 36px rgba(28,124,84,.15);
+        }
+        .metric-icon {
+            width: 52px; height: 52px;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .metric-label { font-size: .8rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; }
+        .metric-value { font-size: 2.25rem; font-weight: 800; color: #1B512D; line-height: 1; margin-top: .25rem; }
+        .metric-sub   { font-size: .78rem; color: #9ca3af; margin-top: .4rem; }
+
+        /* ── Panel ── */
+        .report-panel {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(28,124,84,.08);
+            border: 1px solid #DEF4C6;
+            overflow: hidden;
+        }
+        .report-panel-header {
+            background: linear-gradient(135deg, #1B512D, #1C7C54);
+            padding: 1.25rem 1.75rem;
+            display: flex; align-items: center; gap: .75rem;
+        }
+        .report-panel-header h2 { color: white; font-size: 1.1rem; font-weight: 700; }
+        .report-panel-header p  { color: #DEF4C6; font-size: .8rem; margin-top: .1rem; }
+        .report-panel-body { padding: 1.5rem; }
+
+        /* ── Barra de distribución ── */
+        .dist-bar-wrap { margin-bottom: .85rem; }
+        .dist-bar-label { display: flex; justify-content: space-between; font-size: .82rem; margin-bottom: .3rem; }
+        .dist-bar-label span { color: #374151; font-weight: 600; }
+        .dist-bar-label em   { color: #1C7C54; font-style: normal; font-weight: 700; }
+        .dist-bar-track { height: 9px; border-radius: 99px; background: #DEF4C6; overflow: hidden; }
+        .dist-bar-fill  { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#1C7C54,#B1CF5F); transition: width .8s cubic-bezier(.4,0,.2,1); }
+
+        /* ── Tabla interna ── */
+        .rep-table { width: 100%; border-collapse: collapse; }
+        .rep-table thead th { background: #DEF4C6; color: #1B512D; font-weight: 700; font-size: .8rem;
+            text-transform: uppercase; letter-spacing: .05em; padding: .75rem 1rem; text-align: left; }
+        .rep-table tbody tr { border-bottom: 1px solid #f3f4f6; transition: background .2s; }
+        .rep-table tbody tr:last-child { border-bottom: none; }
+        .rep-table tbody tr:hover { background-color: rgba(222,244,198,.3); }
+        .rep-table tbody td { padding: .7rem 1rem; color: #374151; font-size: .875rem; }
+
+        /* ── Badge alerta ── */
+        .badge-danger  { background:#fee2e2; color:#b91c1c; padding:.2rem .75rem; border-radius:99px; font-size:.75rem; font-weight:700; }
+        .badge-warning { background:#fef9c3; color:#92400e; padding:.2rem .75rem; border-radius:99px; font-size:.75rem; font-weight:700; }
+        .badge-ok      { background:#dcfce7; color:#166534; padding:.2rem .75rem; border-radius:99px; font-size:.75rem; font-weight:700; }
+
+        /* ── Animación entrada ── */
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .anim   { animation: fadeUp .45s ease both; }
+        .anim-d1 { animation-delay:.05s }
+        .anim-d2 { animation-delay:.10s }
+        .anim-d3 { animation-delay:.15s }
+        .anim-d4 { animation-delay:.20s }
+        .anim-d5 { animation-delay:.25s }
+        .anim-d6 { animation-delay:.30s }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-verdeSuave via-white to-verdeClaro/20 min-h-screen">
+
+<div class="app-shell flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <div th:replace="fragments/layout :: sidebar('reportes')"></div>
+
+    <!-- CONTENIDO -->
+    <main class="app-main flex-1 p-6 lg:p-10">
+
+        <!-- ── HEADER ── -->
+        <section class="page-header">
+            <div>
+                <small class="text-principal font-semibold">Análisis y estadísticas</small>
+                <h1 class="text-oscuro">Reportes</h1>
+                <p class="text-gray-600">Indicadores clave de plantas, jardineros e inventario del sistema.</p>
+            </div>
+            <div class="buttons">
+                <a th:href="@{/view/plantas/pdf}"   class="btn-custom btn-naranja">📄 PDF Plantas</a>
+                <a th:href="@{/view/plantas/excel}" class="btn-custom btn-verde">📊 Excel Plantas</a>
+                <a th:href="@{/view/jardinero/pdf}" class="btn-custom btn-principal">📄 PDF Jardineros</a>
+            </div>
+        </section>
+
+        <!-- ── MÉTRICAS PRINCIPALES ── -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+
+            <article class="metric-card anim anim-d1">
+                <div class="metric-icon" style="background:#DEF4C6;">🌱</div>
+                <p class="metric-label">Total plantas</p>
+                <h2 class="metric-value" th:text="${totalPlantas}">0</h2>
+                <p class="metric-sub" th:text="|${especiesUnicas} especies distintas|">0 especies</p>
+            </article>
+
+            <article class="metric-card anim anim-d2">
+                <div class="metric-icon" style="background:#DCFCE7;">🧑‍🌾</div>
+                <p class="metric-label">Total jardineros</p>
+                <h2 class="metric-value" th:text="${totalJardineros}">0</h2>
+                <p class="metric-sub" th:text="|${rolesUnicos} roles diferentes|">0 roles</p>
+            </article>
+
+            <article class="metric-card anim anim-d3">
+                <div class="metric-icon" style="background:#FEF3C7;">📦</div>
+                <p class="metric-label">Stock total</p>
+                <h2 class="metric-value" th:text="${stockTotal}">0</h2>
+                <p class="metric-sub">Unidades en inventario</p>
+            </article>
+
+            <article class="metric-card anim anim-d4">
+                <div class="metric-icon" style="background:#E0F2FE;">💰</div>
+                <p class="metric-label">Valor inventario</p>
+                <h2 class="metric-value"
+                    th:text="${'$' + #numbers.formatInteger(valorInventario, 0, 'POINT')}">$0</h2>
+                <p class="metric-sub">Precio × cantidad acumulado</p>
+            </article>
+
+            <article class="metric-card anim anim-d5">
+                <div class="metric-icon" style="background:#F3E8FF;">📈</div>
+                <p class="metric-label">Precio promedio</p>
+                <h2 class="metric-value"
+                    th:text="${'$' + #numbers.formatInteger(precioPromedio, 0, 'POINT')}">$0</h2>
+                <p class="metric-sub">Por unidad de planta</p>
+            </article>
+
+            <article class="metric-card anim anim-d6">
+                <div class="metric-icon" style="background:#FEE2E2;">🏆</div>
+                <p class="metric-label">Planta más valiosa</p>
+                <h2 class="metric-value"
+                    th:text="${'$' + #numbers.formatInteger(plantaMasValiosa, 0, 'POINT')}">$0</h2>
+                <p class="metric-sub">Precio unitario más alto</p>
+            </article>
+
+        </section>
+
+        <!-- ── DISTRIBUCIONES ── -->
+        <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+
+            <!-- Plantas por especie -->
+            <article class="report-panel anim anim-d1">
+                <div class="report-panel-header">
+                    <span style="font-size:1.4rem">🌿</span>
+                    <div>
+                        <h2>Distribución por especie</h2>
+                        <p>Cantidad de plantas registradas por especie</p>
+                    </div>
+                </div>
+                <div class="report-panel-body">
+
+                    <div th:if="${#maps.isEmpty(plantasPorEspecie)}"
+                         class="text-center text-gray-400 py-8">Sin datos de especies.</div>
+
+                    <!-- maxPorEspecie viene precalculado del controller -->
+                    <div th:each="entry : ${plantasPorEspecie}" class="dist-bar-wrap">
+                        <div class="dist-bar-label">
+                            <span th:text="${entry.key}">Especie</span>
+                            <em th:text="${entry.value}">0</em>
+                        </div>
+                        <div class="dist-bar-track">
+                            <div class="dist-bar-fill"
+                                 th:style="${'width:' + (entry.value * 100 / maxPorEspecie) + '%'}">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </article>
+
+            <!-- Jardineros por rol -->
+            <article class="report-panel anim anim-d2">
+                <div class="report-panel-header">
+                    <span style="font-size:1.4rem">👷</span>
+                    <div>
+                        <h2>Distribución por rol</h2>
+                        <p>Cantidad de jardineros según su función</p>
+                    </div>
+                </div>
+                <div class="report-panel-body">
+
+                    <div th:if="${#maps.isEmpty(jardinerosPorRol)}"
+                         class="text-center text-gray-400 py-8">Sin datos de roles.</div>
+
+                    <!-- maxPorRol viene precalculado del controller -->
+                    <div th:each="entry : ${jardinerosPorRol}" class="dist-bar-wrap">
+                        <div class="dist-bar-label">
+                            <span th:text="${entry.key}">Rol</span>
+                            <em th:text="${entry.value}">0</em>
+                        </div>
+                        <div class="dist-bar-track">
+                            <div class="dist-bar-fill"
+                                 th:style="${'width:' + (entry.value * 100 / maxPorRol) + '%'}">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </article>
+
+        </section>
+
+        <!-- ── TOP 5 + BAJO STOCK ── -->
+        <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+
+            <!-- Top 5 por valor -->
+            <article class="report-panel anim anim-d1">
+                <div class="report-panel-header">
+                    <span style="font-size:1.4rem">🏅</span>
+                    <div>
+                        <h2>Top 5 por valor total</h2>
+                        <p>Plantas con mayor valor acumulado (precio × stock)</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="rep-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nombre</th>
+                                <th>Especie</th>
+                                <th>Precio</th>
+                                <th>Cant.</th>
+                                <th>Valor total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p,iter : ${topPlantas}"
+                                th:with="valorTotal=${(p.precio != null ? p.precio : 0) * (p.cantidad != null ? p.cantidad : 0)}">
+                                <td>
+                                    <span th:text="${iter.index + 1}"
+                                          th:class="${iter.index == 0 ? 'badge-ok' : (iter.index == 1 ? 'badge-warning' : 'font-bold text-gray-500')}"
+                                    >#1</span>
+                                </td>
+                                <td class="font-semibold" style="color:#1B512D" th:text="${p.nombre}">Nombre</td>
+                                <td><span class="badge-ok" th:text="${p.especie}">Especie</span></td>
+                                <td class="font-bold" style="color:#1C7C54"
+                                    th:text="${p.precio != null ? ('$' + #numbers.formatInteger(p.precio, 0, 'POINT')) : '$0'}">$0</td>
+                                <td th:text="${p.cantidad != null ? p.cantidad : 0}">0</td>
+                                <td class="font-bold" style="color:#1B512D"
+                                    th:text="${'$' + #numbers.formatInteger(valorTotal, 0, 'POINT')}">$0</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(topPlantas)}">
+                                <td colspan="6" class="text-center text-gray-400 py-6">Sin registros.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <!-- Plantas con bajo stock -->
+            <article class="report-panel anim anim-d2">
+                <div class="report-panel-header" style="background: linear-gradient(135deg,#7f1d1d,#b91c1c);">
+                    <span style="font-size:1.4rem">⚠️</span>
+                    <div>
+                        <h2>Plantas con bajo stock</h2>
+                        <p>Menos de 10 unidades — requieren atención</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="rep-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Especie</th>
+                                <th>Cantidad</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${bajoStock}">
+                                <td class="font-semibold" style="color:#1C7C54" th:text="${p.codigo}">COD</td>
+                                <td th:text="${p.nombre}">Nombre</td>
+                                <td th:text="${p.especie}">Especie</td>
+                                <td class="font-bold" th:text="${p.cantidad}">0</td>
+                                <td>
+                                    <span th:if="${p.cantidad == 0}"  class="badge-danger">Sin stock</span>
+                                    <span th:if="${p.cantidad gt 0 and p.cantidad lt 5}" class="badge-danger">Crítico</span>
+                                    <span th:if="${p.cantidad ge 5}"  class="badge-warning">Bajo</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(bajoStock)}">
+                                <td colspan="5" class="text-center text-gray-400 py-6">
+                                    ✅ Todas las plantas tienen stock suficiente.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+        </section>
+
+        <!-- ── STOCK POR ESPECIE ── -->
+        <section class="report-panel mb-8 anim anim-d1">
+            <div class="report-panel-header">
+                <span style="font-size:1.4rem">📊</span>
+                <div>
+                    <h2>Stock total por especie</h2>
+                    <p>Unidades acumuladas en inventario agrupadas por especie</p>
+                </div>
+            </div>
+            <div class="report-panel-body">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+
+                    <div th:if="${#maps.isEmpty(stockPorEspecie)}"
+                         class="col-span-full text-center text-gray-400 py-6">Sin datos.</div>
+
+                    <div th:each="entry : ${stockPorEspecie}"
+                         class="rounded-2xl p-4 flex flex-col gap-1 transition-colors cursor-default"
+                         style="border:1px solid #DEF4C6; background:rgba(222,244,198,.3);"
+                         onmouseover="this.style.background='rgba(222,244,198,.65)'"
+                         onmouseout="this.style.background='rgba(222,244,198,.3)'">
+                        <span class="text-xs font-bold uppercase tracking-wide" style="color:#1B512D"
+                              th:text="${entry.key}">Especie</span>
+                        <span class="text-3xl font-black" style="color:#1C7C54"
+                              th:text="${entry.value}">0</span>
+                        <span class="text-xs text-gray-500">unidades</span>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+
+</body>
+</html>
