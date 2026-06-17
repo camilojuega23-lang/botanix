@@ -4,6 +4,7 @@ import botanix.botanix.model.Usuario;
 import botanix.botanix.repository.UsuarioRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,8 @@ public class UsuarioView {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/login")
     public String mostrarLogin(HttpSession session) {
@@ -34,8 +37,10 @@ public class UsuarioView {
 
         if (resultado.isPresent()) {
             Usuario usuario = resultado.get();
-            if (usuario.getContrasena().equals(contrasena)) {
+            if (passwordEncoder.matches(contrasena,  usuario.getContrasena())) {
                 session.setAttribute("usuarioLogueado", usuario.getNombre());
+                session.setAttribute("usuarioId", usuario.getId_usuario());
+                session.setAttribute("usuarioCorreo", usuario.getCorreo());
                 return "redirect:/dashboard";
             }
         }
@@ -57,12 +62,23 @@ public class UsuarioView {
     public String procesarRegistro(@RequestParam String nombre,
                                    @RequestParam String correo,
                                    @RequestParam String contrasena,
+                                   @RequestParam String confirmarContrasena,
                                    RedirectAttributes ra) {
         String nombreNormalizado = nombre.trim();
         String correoNormalizado = correo.trim();
 
         if (nombreNormalizado.isEmpty() || correoNormalizado.isEmpty() || contrasena.isBlank()) {
             ra.addFlashAttribute("error", "Completa todos los campos requeridos");
+            return "redirect:/registro";
+        }
+
+        if (!contrasena.equals(confirmarContrasena)) {
+            ra.addFlashAttribute("error", "Las contraseñas no coinciden");
+            return "redirect:/registro";
+        }
+
+        if (contrasena.length() < 6) {
+            ra.addFlashAttribute("error", "La contraseña debe tener al menos 6 caracteres");
             return "redirect:/registro";
         }
 
@@ -74,7 +90,7 @@ public class UsuarioView {
         Usuario usuario = Usuario.builder()
                 .nombre(nombreNormalizado)
                 .correo(correoNormalizado)
-                .contrasena(contrasena)
+                .contrasena(passwordEncoder.encode(contrasena))
                 .build();
 
         usuarioRepository.save(usuario);
